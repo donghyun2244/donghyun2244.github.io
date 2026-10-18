@@ -179,6 +179,7 @@ SELECT * FROM dba_data_files;
 ```
 ![](/assets/img/oracle-2026-10-15/10.png)
 - userdata02라는 파일을 userdata에 추가했다.
+
 ```sql
 -- 자동확장 기능 활성화 (autoextend on maxsize 값)
 ALTER DATABASE DATAFILE '/u01/app/oracle/oradata/ORA19C/usersdata02.dbf' 
@@ -190,6 +191,7 @@ SELECT * FROM dba_data_files;
 SELECT * FROM dba_data_files;
 -- 이거 unlitm면  oracle의 data file 크기 제한이 적용됨
 ```
+
 - next 1m : 다음 확장시 1m 씩 늘어난다
 ![](/assets/img/oracle-2026-10-15/11.png)
 - 1m씩 확장할때 마다 128 block씩 늘어난다
