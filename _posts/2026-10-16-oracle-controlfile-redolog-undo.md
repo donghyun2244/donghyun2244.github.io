@@ -9,11 +9,13 @@ tags: [Oracle 19c, Control File, Redo Log, Undo]
 
 
 #control file 이관
+
 ```plain text
 /u01/app/oracle/oradata/ORA19C/control01.ctl -> /home/oracle/userdata/control01.ctl
 ```
 
 1. **초기파라미터 파일이 pfile, spfile 체크**
+
 ```bash
 SYS@ora19c> show parameter spfile
 
@@ -24,6 +26,7 @@ spfile                               string      /u01/app/oracle/product/19.3.0
 ```
 
 1. control_files 파라미터값을 수정
+
 ```bash
 SYS@ora19c> show parameter control_files
 
@@ -58,6 +61,7 @@ SELECT * FROM v$log;
 ```
 
 #redo logfile 이관
+
 ```plain text
 /u01/app/oracle/fast_recovery_area/ORA19C/onlinelog/redo02.log -> /home/oracle/userdata/redo02.log
 /u01/app/oracle/oradata/ORA19C/redo3.log -> /home/oracle/userdata/redo3.log
@@ -79,6 +83,7 @@ to '/home/oracle/userdata/redo06.log';
 
 #control file, redo log file 이관 실습
 1. **초기파라미터 파일이 pfile, spfile 체크**
+
 ```bash
 SYS@ora19c> show parameter spfile
 
@@ -89,6 +94,7 @@ spfile                               string      /u01/app/oracle/product/19.3.0
 ```
 
 1. control_files 파라미터값을 수정
+
 ```bash
 SYS@ora19c> show parameter control_files
 
@@ -121,6 +127,7 @@ NAME
 ```
 
 1. 데이터베이스 정상적인 종료
+
 ```bash
 SYS@ora19c> shutdown immediate
 Database closed.
@@ -130,6 +137,7 @@ SYS@ora19c> !
 ```
 
 1. 기존 컨트롤파일, 리두로그 파일로 새로운 위치로 이동
+
 ```bash
 mv -v /u01/app/oracle/oradata/ORA19C/control01.ctl /home/oracle/userdata/
 mv -v /u01/app/oracle/fast_recovery_area/ORA19C/onlinelog/redo02.log /home/oracle/userdata/
@@ -143,6 +151,7 @@ redo02.log     redo3.log   system01.dbf  undotbs01.dbf  users01.dbf
 ```
 
 1. 데이터베이스를 mount 시작
+
 ```bash
 SYS@ora19c> startup mount
 ORACLE instance started.
@@ -202,9 +211,11 @@ NAME
 
 
 ```
+
 6.?
 
 1. 데이터베이스 시작
+
 ```bash
 SYS@ora19c> alter database open;
 Database altered.
@@ -212,6 +223,7 @@ Database altered.
 ```
 
 \[문제\]  모든 컨트롤파일, 리두로그파일, 데이터파일 이관
+
 ```bash
 SYS@ora19c> ! ls -lh /home/oracle/userdata/*.{ctl,log,dbf}
 -rw-r-----. 1 oracle oinstall  11M Oct 15 22:19 /home/oracle/userdata/control01.ctl
@@ -232,6 +244,7 @@ total 0
 ```
 
 1. **파일 전부 다 옮기는 법**
+
 ```bash
 
 alter system set control_files = '/u01/app/oracle/oradata/ORA19C/control01.ctl' scope = spfile;
@@ -312,6 +325,7 @@ alter database open;
 - OPEN: Data File까지 열어 일반적인 SQL 작업을 수행할 수 있음
 
 **#내가 직접 수행한거**
+
 ```bash
 
  SYS@ora19c> alter system set control_files = '/u01/app/oracle/oradata/ORA19C/' scope = spfile;
@@ -582,6 +596,7 @@ ls: cannot access /home/oracle/userdata/*.dbf: No such file or directory
 	- 읽기 일관성이 어긋난 경우 ORA-01555
 	- enq : US - contention 대기 이벤트
 -
+
 ```bash
 SYS@ora19c> show parameter undo_tablespace
 
@@ -609,6 +624,7 @@ select * from v$parameter
 where name in ('undo_tablespace', 'undo_management', 'undo_retention');
 
 ```
+
 ![](/assets/img/oracle-2026-10-16/02.png)
 - 시스템 테이블 스페이스는 딕셔너리 테이블 정보가 저장되어 있다. 
 - 딕셔너리 정보는 ddl 문장이 수행될때 수정된다. 
@@ -654,11 +670,13 @@ HR@ora19c> select salary from hr.employees where employee_id = 200;
 ----------
       5000
 ```
+
 - 0번은 딕셔너리 정보에 대한 undo이다
 - XACTS : 트랜잭션이 몇개나 붙어 있나 표시
 - STATUS : db켤때 알아서 켜진다
 
 - 오라클은 undo랑 CR이 있어서 트랜잭션하고 있는 데이터도 다른 사람도 볼 수 있다.
+
 ```bash
 SYS@ora19c> SELECT s.username, t.xidusn, t.ubafil, t.ubablk, t.used_ublk
              FROM v$session s, v$transaction t
@@ -668,6 +686,7 @@ USERNAME           XIDUSN     UBAFIL     UBABLK  USED_UBLK
 --------------- ---------- ---------- ---------- ----------
 HR                       8          4       2503          1
 ```
+
 - XIDUSN : UNDO 세그먼트 id
 - ubafil : undo 세그먼트가 속해져 있는 파일번호
 - undo 헤더블락에 트랜잭션 정보를 담아 놓는다
@@ -678,9 +697,11 @@ select * from v$session;
 -- 현재 활성 트랜잭션 상세 정보 확인
 SELECT * FROM v$transaction;
 ```
+
 - 이걸로 세션 모니터링 한다
 
 #같은 사용자에서 다른 세션으로 들어올때
+
 ```bash
 <<session 2>>
 HR@ora19c> update hr.employees set salary = salary * 1.5 where employee_id = 150;
@@ -724,10 +745,12 @@ USERNAME               SID    SERIAL#     XIDUSN     UBAFIL     UBABLK  USED_UBL
 HR                     406      29909          5          4       4451          1
 HR                      38       6823          8          4       2503
 ```
+
 - 오라클은 하나의 세션에 하나의 undo를 줄려고 하고 만약에 부족하면 10개를 추가적으로 만든다
 - 근데 만약에 undo 공간을 더 만들수 없을때는 undo를 같이 쓴다. 그래도 부족하면 오류가 발생한다.
 
 **#session kill**
+
 ```bash
 alter system kill session '38,6823' immediate; #세션 1kill
 
@@ -758,9 +781,11 @@ ORA-03114: not connected to ORACLE
 
 
 ```
+
 - kill 시키면 pmon이 rollback해준
 
 #undo tablespace에 undo data file 추가
+
 ```bash
 ALTER TABLESPACE undotbs1 ADD DATAFILE
 '/u01/app/oracle/oradata/ORA19C/undotbs02.dbf'
@@ -768,14 +793,18 @@ SIZE 10M AUTOEXTEND ON;
 
 select * from dba_data_files;
 ```
+
 ![2개로 늘어남](/assets/img/oracle-2026-10-16/03.png)
+
 ```bash
 SYS@ora19c> ! ls -lh /u01/app/oracle/oradata/ORA19C/undotbs02.dbf
 -rw-r-----. 1 oracle oinstall 11M Oct 16 02:04 /u01/app/oracle/oradata/ORA19C/undotbs02.dbf
 
 ```
+
 #Undo 파일을 옮기고 싶은데 offline으로 내리지는 못한다.
 #새로운 undo tablespace 생성
+
 ```bash
 create undo tablespace undo1 
 datafile '/u01/app/oracle/oradata/ORA19C/undo01.dbf' size 10m autoextend on;
@@ -783,10 +812,12 @@ datafile '/u01/app/oracle/oradata/ORA19C/undo01.dbf' size 10m autoextend on;
 select * from dba_tablespaces;
 select * from dba_data_files;
 ```
+
 ![](/assets/img/oracle-2026-10-16/04.png)
 ![](/assets/img/oracle-2026-10-16/05.png)
 - 기본 적인 db에서는 undo를 하나만 쓰기 때문에 하나를 추가해도 그냥 기존에 있던 하나만 사용한다
 - rac만 노드 하나당 undo 테이블 하나를 사용한다.  그래서 노드가 여러개만 undo테이블도 여러개일 수 있다. 
+
 ```bash
 SYS@ora19c> SHOW PARAMETER undo_tablespace;
 
@@ -834,6 +865,7 @@ SYS@ora19c> SELECT n.usn, n.name, s.extents, s.rssize, s.xacts, s.status
 
 - undo  관리만 static , undo_tablespace는 다이나믹 파라미터
 #새로운 undo tablespace 지정
+
 ```bash
 SYS@ora19c> SHOW PARAMETER undo_tablespace;
 
@@ -952,11 +984,13 @@ SYS@ora19c> SELECT n.usn, n.name, s.extents, s.rssize, s.xacts, s.status
 
 
 ```
+
 - 기존에 있던 게 트랜잭션이 끝나서 다 내려갔다.
 
 #undo tablespace 삭제
 - undo tablespace에 속한 undo segment 전부 offline 상태이기 때문에 삭제가능하다.
 - 만약에 PENDING OFFLINE상태가 있을 경우는 삭제가 불가능하다.
+
 ```bash
 SYS@ora19c> drop tablespace undotbs1 including contents and datafiles;
 
@@ -965,6 +999,7 @@ Tablespace dropped.
 ```
 
 #새로운 undo tablespace 생성
+
 ```bash
 create undo tablespace undotbs1
 datafile '/u01/app/oracle/oradata/ORA19C/undotbs01.dbf' size 10m autoextend on;
@@ -984,6 +1019,7 @@ Tablespace dropped.
 ```
 
 ■ 유저 생성
+
 ```bash
 CREATE USER 유저이름
 IDENTIFIED BY 패스워드; -- 이것만 있어도 생성된다. 
@@ -998,6 +1034,7 @@ ACCOUNT [UNLOCK(기본값) | LOCK]
 PROFILE [프로파일 | DEFAULT(기본값)]
 PASSWORD EXPIRE;
 ```
+
 - 유저이름 : 데이터베이스에서 고유한 이름으로 설정
 - 패스워드 : 데이터베이스 로그인시에 사용할 비밀번호
 - PASSWORD EXPIRE : 유저가 로그인할때 암호를 재설정하도록하는 기능
@@ -1011,6 +1048,7 @@ TEMPORARY TABLESPACE : 정렬, 해시, 비트맵 인덱스 생성, 병합시에 
 - SQL Work Areas: PGA 내부에서 SQL 실행 시 정렬(Sort) 및 해시(Hash Join)와 비트맵 인덱스 생성 및 병합 등에 사용하는 작업용 메모리 영역
 
 ■ 유저 수정
+
 ```bash
 ALTER USER 유저이름 -- 필수 구문
 IDENTIFIED BY 패스워드
@@ -1034,6 +1072,7 @@ DROP USER 유저이름 CASCADE;
 ```bash
 ALTER SYSTEM KILL SESSION 'sid,serial#' IMMEDIATE;
 ```
+
 - TEMPORARY TABLESPACE는 유저별로 나눠서 사용한다
 
 ```bash
@@ -1058,6 +1097,7 @@ PASSWORD EXPIRE;
 select * from dba_users where username = 'INSA';
 select * from dba_ts_quotas where username = 'INSA';
 ```
+
 ![](/assets/img/oracle-2026-10-16/06.png)
 ![](/assets/img/oracle-2026-10-16/07.png)
 ![](/assets/img/oracle-2026-10-16/08.png)
@@ -1078,6 +1118,7 @@ temporary_tablespace를 먼저 쓰고 그 다음에 로컬을 사용
 - VIEW : SELECT, INSERT, UPDATE, DELETE;
 - SEQUENCE : SELECT, ALTER
 - PROCEDURE, FUNCTION PACKAGE : EXECUTE - 다른 소유자가 가지고 있는 거는 EXECUTE 권한이 필요하다
+
 ```bash
 [oracle@oracle19c ~]$ sqlplus insa/oracle
 
@@ -1264,7 +1305,9 @@ SELECT *
 FROM dba_tab_privs
 WHERE grantee IN ('INSA', 'INSA_BUHA');
 ```
+
 ![](/assets/img/oracle-2026-10-16/11.png)
+
 ```bash
 #인사 부하 세션
 INSA_BUHA@ora19c> SELECT * FROM user_tab_privs;
@@ -1296,7 +1339,9 @@ END;
 / 
 1 scott
 ```
+
 - 익명블록 구조는 따로 권한이 필요없고 익명블록이 작동되는 테이블에 대한 권한만 있으면 된다.
+
 ```bash
 INSA_BUHA@ora19c> insert into insa.emp(id, name) values(2,'liam');
 insert into insa.emp(id, name) values(2,'liam')
@@ -1317,7 +1362,9 @@ delete from insa.emp where id = 1
 ERROR at line 1:
 ORA-01031: insufficient privileges
 ```
+
 -근데 insert권한이 없을때 하면 권한 없다고 뜨고 select권한 없을때 하면 테이블이 없다고 뜨자나 select권한 자체도 없는데 insert하면 어떻게 떠나? —\> 존재하지 않는 테이블이라고 뜬다.
+
 ```bash
 #인사 세션
 INSA@ora19c> GRANT INSERT,UPDATE, DELETE ON insa.emp TO insa_buha;
@@ -1500,6 +1547,7 @@ INSA_BUHA@ora19c> select insa.id_seq.currval from dual;
 
 
 ```
+
 ---
 ### 1. 초기 파라미터 파일과 Control File
 - 데이터베이스 기동 시 초기 파라미터 파일(PFILE 또는 SPFILE)의 `CONTROL_FILES` 설정으로 Control File의 위치를 확인한다.
@@ -1517,6 +1565,7 @@ sqlplus \>`COL username FORMAT A15`
 — 덜깨
 ## 오류 사례
 ### 4. HR 계정에서 동적 성능 뷰 조회 오류 (ORA-00942)
+
 ```sql
 HR@ora19c> SELECT s.username, t.xidusn, t.ubafil, t.ubablk, t.used_ublk
              FROM v$session s, v$transaction t
@@ -1525,9 +1574,11 @@ HR@ora19c> SELECT s.username, t.xidusn, t.ubafil, t.ubablk, t.used_ublk
 ERROR at line 2:
 ORA-00942: table or view does not exist
 ```
+
 - **원인:** HR 사용자에게 `V$SESSION` 및 `V$TRANSACTION` 조회에 필요한 권한이 없어 발생한 오류다. 같은 조회를 SYS 계정으로 실행했을 때는 결과가 출력됐다.
 - 사용자에 따라 데이터 딕셔너리와 동적 성능 뷰에 접근할 수 있는 권한이 다르다.
 ### 5. Tablespace 생성 시 파일 크기 오류 (ORA-03214)
+
 ```sql
 SYS@ora19c> CREATE TABLESPACE insa_tbs
              DATAFILE '/u01/app/oracle/oradata/ORA19C/insa_tbs01.dbf'
@@ -1542,9 +1593,11 @@ SYS@ora19c> CREATE TABLESPACE insa_tbs
 
 Tablespace created.
 ```
+
 - **원인:** `SIZE 10`은 단위를 붙이지 않으면 10바이트이므로 데이터 파일의 최소 크기보다 작다.
 - **해결:** `SIZE 10M`으로 수정하자 Tablespace가 생성됐다.
 ### 6. 급여 UPDATE 시 숫자 정밀도 초과 (ORA-01438)
+
 ```sql
 HR@ora19c> UPDATE hr.employees
              SET salary = salary * 5000
@@ -1559,9 +1612,11 @@ HR@ora19c> UPDATE hr.employees
 
 1 row updated.
 ```
+
 - **원인:** 5000배 계산 결과가 `SALARY` 컬럼에서 허용하는 숫자 정밀도를 초과했다.
 - **해결:** 1.5배로 변경한 UPDATE는 정상 실행됐다.
 ### 7. 시퀀스 INSERT 값 개수 오류 (ORA-00913)
+
 ```sql
 INSA_BUHA@ora19c> INSERT INTO insa.emp(id,name)
                   VALUES(insa, id_seq.nextval, 'scott');
@@ -1569,10 +1624,13 @@ INSA_BUHA@ora19c> INSERT INTO insa.emp(id,name)
 ERROR at line 1:
 ORA-00913: too many values
 ```
+
 - **원인:** INSERT 대상 컬럼은 `ID`와 `NAME`의 2개인데 `VALUES`에 3개 값을 지정했다.
 - **올바른 형식:** 시퀀스 이름은 `insa.id_seq.NEXTVAL`처럼 소유자와 시퀀스 이름을 점으로 연결한다.
+
 ```sql
 INSERT INTO insa.emp(id, name)
 VALUES(insa.id_seq.NEXTVAL, 'scott');
 ```
+
 - **주의:** 위 형식이 올바르더라도 `INSA_BUHA`가 `INSA.ID_SEQ`에 대한 `SELECT` 권한을 받기 전에는 별도로 `ORA-00942`가 발생했다. 권한 부여와 최종 성공 결과는 위쪽 시퀀스 실습에 이미 기록돼 있다.
