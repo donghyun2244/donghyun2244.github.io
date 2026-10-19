@@ -10,7 +10,7 @@ tags: [Oracle 19c, Control File, Redo Log, Undo]
 
 #control file 이관
 
-```plain text
+```text
 /u01/app/oracle/oradata/ORA19C/control01.ctl -> /home/oracle/userdata/control01.ctl
 ```
 
@@ -62,7 +62,7 @@ SELECT * FROM v$log;
 
 #redo logfile 이관
 
-```plain text
+```text
 /u01/app/oracle/fast_recovery_area/ORA19C/onlinelog/redo02.log -> /home/oracle/userdata/redo02.log
 /u01/app/oracle/oradata/ORA19C/redo3.log -> /home/oracle/userdata/redo3.log
 /u01/app/oracle/oradata/ORA19C/redo06.log -> /home/oracle/userdata/redo06.log
